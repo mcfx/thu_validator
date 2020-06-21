@@ -7,10 +7,10 @@ axios.get('/getkey').then(s => {
 	url = 'https://webvpn.tsinghua.edu.cn/https/77726476706e69737468656265737421a1a710d2717e3e1e28/resolve?name='+key+'.tmptest.icu&type=txt';
 	document.getElementById('url').innerText = url;
 	document.getElementById('url').href = url;
-	setInterval(function() {
+	id = setInterval(function() {
 		axios.get('/checkkey/'+key).then(s => {
 			document.getElementById('token').innerHTML = s.data.token;
-			if (s.data.sign) clearInterval(0);
+			if (s.data.token) clearInterval(id);
 		})
 	}, 2000)
 })
