@@ -1,0 +1,17 @@
+<script src="https://cdn.jsdelivr.net/npm/axios@0.x/dist/axios.min.js"></script>
+在一分钟内，在 WebVPN 认证后，访问此链接：<a id="url"></a><br>
+即可得到 token：<span id="token"></span>
+<script>
+axios.get('/getkey').then(s => {
+	key = s.data.key;
+	url = 'https://webvpn.tsinghua.edu.cn/https/77726476706e69737468656265737421a1a710d2717e3e1e28/resolve?name='+key+'.tmptest.icu&type=txt';
+	document.getElementById('url').innerText = url;
+	document.getElementById('url').href = url;
+	setInterval(function() {
+		axios.get('/checkkey/'+key).then(s => {
+			document.getElementById('token').innerHTML = s.data.token;
+			if (s.data.sign) clearInterval(0);
+		})
+	}, 2000)
+})
+</script>
