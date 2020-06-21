@@ -2,11 +2,10 @@
 在一分钟内，在 WebVPN 认证后，访问此链接：<a id="url"></a><br>
 即可得到 token：<span id="token"></span>
 <script>
-axios.get('/getkey').then(s => {
+axios.get('/geturl').then(s => {
 	key = s.data.key;
-	url = 'https://webvpn.tsinghua.edu.cn/https/77726476706e69737468656265737421a1a710d2717e3e1e28/resolve?name='+key+'.tmptest.icu&type=txt';
-	document.getElementById('url').innerText = url;
-	document.getElementById('url').href = url;
+	document.getElementById('url').innerText = s.data.url;
+	document.getElementById('url').href = s.data.url;
 	id = setInterval(function() {
 		axios.get('/checkkey/'+key).then(s => {
 			document.getElementById('token').innerHTML = s.data.token;

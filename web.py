@@ -1,6 +1,7 @@
-import time, hmac, hashlib, random, threading
+import time, hmac, hashlib, random, threading, binascii
 from dnslib.server import DNSServer, RR
 from flask import Flask, jsonify
+from Crypto.Cipher import AES # used for WebVPN url generation
 
 domain = '.tmptest.icu.'
 salt_key = 'xxx'
@@ -25,20 +26,24 @@ def gettoken():
 
 class KeyResolver:
 	def resolve(self,request,handler):
+		print(request)
 		qname = str(request.questions[0].qname)
-		if 16 == request.questions[0].qtype and qname.endswith(domain):
+		if 1 == request.questions[0].qtype and qname.endswith(domain):
 			key = qname[:-len(domain)]
 			if validkey(key):
 				keys[key] = time.time() + 60
 		reply = request.reply()
-		reply.add_answer(*RR.fromZone(qname + " 60 TXT ok"))
+		reply.add_answer(*RR.fromZone(qname + " 60 A 1.0.0.1"))
 		return reply
 
 def key_clear():
 	while True:
-		for i in keys:
+		popl = []
+		for i in keys.copy():
 			if keys[i] < time.time():
-				keys.pop(i)
+				popl.append(i)
+		for i in popl:
+			keys.pop(i)
 		time.sleep(10)
 threading.Thread(target=key_clear).start()
 
@@ -52,9 +57,14 @@ app = Flask(__name__)
 def index():
 	return open('index.html').read()
 
-@app.route('/getkey')
-def getkey():
-	return jsonify({'key': genkey()})
+@app.route('/geturl')
+def geturl():
+	key = genkey()
+	aeskey = b'wrdvpnisthebest!'
+	cipher = AES.new(aeskey, AES.MODE_CFB, iv=aeskey, segment_size=128)
+	path = binascii.hexlify(aeskey + cipher.encrypt((key + domain[:-1]).encode())).decode()
+	url = 'https://webvpn.tsinghua.edu.cn/https/' + path + '/'
+	return jsonify({'key': key, 'url': url})
 
 @app.route('/checkkey/<key>')
 def checkkey(key):
